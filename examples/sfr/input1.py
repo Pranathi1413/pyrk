@@ -35,7 +35,7 @@ t0 = 0.00 * units.seconds
 dt = 0.005 * units.seconds
 
 # Final Time
-tf = 10.0 * units.seconds
+tf = 1.0 * units.seconds
 
 # Geometry
 r_fuel = 0.00348 * units.meter
@@ -119,13 +119,12 @@ from pyrk.reactivity_insertion import ReactivityInsertion
 from pyrk.reactivity_insertion \
     import StepReactivityInsertion
 # rho_ext = ReactivityInsertion(timer=ti)
-rho_ext = StepReactivityInsertion(timer=ti, t_step=1.0*units.seconds,
+rho_ext = StepReactivityInsertion(timer=ti, t_step=0.6*units.seconds,
                                   rho_init=0.0*units.delta_k,
                                   rho_final=0.005*units.delta_k)
 
 # maximum number of internal steps that the ode solver will take
 nsteps = 1000
-
 
 fuel = th.THComponent(name="fuel",
                       mat=SFRMetal(name="sfrfuel"),
@@ -164,7 +163,6 @@ fuel.add_conduction('clad', area=a_fuel, L=1 * units.meter)
 clad.add_conduction('fuel', area=a_fuel, L=1 * units.meter)
 
 # TODO define L, it's assigned to 1 meter as a placeholder now
-
 
 # The clad convects with the coolant
 clad.add_convection('cool', h=h_cool, area=a_clad)

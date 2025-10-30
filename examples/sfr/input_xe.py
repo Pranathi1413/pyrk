@@ -35,7 +35,7 @@ t0 = 0.00 * units.seconds
 dt = 0.005 * units.seconds
 
 # Final Time
-tf = 10.0 * units.seconds
+tf = 1.0 * units.seconds
 
 # Geometry
 r_fuel = 0.00348 * units.meter
@@ -119,13 +119,41 @@ from pyrk.reactivity_insertion import ReactivityInsertion
 from pyrk.reactivity_insertion \
     import StepReactivityInsertion
 # rho_ext = ReactivityInsertion(timer=ti)
-rho_ext = StepReactivityInsertion(timer=ti, t_step=1.0*units.seconds,
+rho_ext = StepReactivityInsertion(timer=ti, t_step=0.6*units.seconds,
                                   rho_init=0.0*units.delta_k,
                                   rho_final=0.005*units.delta_k)
 
 # maximum number of internal steps that the ode solver will take
 nsteps = 1000
 
+# -------------------------------
+# NEW: Xe/I (poisons) configuration
+# -------------------------------
+# absorption OFF (phi_per_watt=0, sigma_* = 0)
+# todo(pran): include units
+poisons = {
+    "enabled": True,
+
+    # Energy released per fission (~200 MeV = 3.204e-11 J)
+    "E_fission": 3.204e-11,
+
+    # Decay constants [1/s]
+    "lambda_I": math.log(2) / (6.58 * 3600.0),
+    "lambda_Xe": math.log(2) / (9.14 * 3600.0),
+
+    # Direct fission yields (fractions per fission)
+    "gamma_I": 0.063,
+    "gamma_Xe": 0.003,
+
+    "phi_per_watt": 0.0,   # maps Watts → “flux units” (leave 0.0 first)
+    "sigma_I": 0.0,        # effective I-135 absorption coefficient
+    "sigma_Xe": 0.0,       # effective Xe-135 absorption coefficient
+
+    # Reactivity mapping (Δk per Xe “inventory” unit)
+    "alpha_xe": 1.0e-7,
+
+    # "X_ref": 0.0,
+}
 
 fuel = th.THComponent(name="fuel",
                       mat=SFRMetal(name="sfrfuel"),
@@ -164,7 +192,6 @@ fuel.add_conduction('clad', area=a_fuel, L=1 * units.meter)
 clad.add_conduction('fuel', area=a_fuel, L=1 * units.meter)
 
 # TODO define L, it's assigned to 1 meter as a placeholder now
-
 
 # The clad convects with the coolant
 clad.add_convection('cool', h=h_cool, area=a_clad)

@@ -32,6 +32,11 @@ def update_n(t, y_n, si):
     t_idx = si.timer.t_idx(t * units.seconds)
     n_n = len(y_n)
     si.y[t_idx][:n_n] = y_n
+    if getattr(si, "poisons", None) and si.poisons.get("enabled", False):
+        end_dg = 1 + si.n_pg + si.n_dg
+        si.ne._Xe = y_n[end_dg + 1]
+        si.ne._I  = y_n[end_dg]
+
 
 
 def update_th(t, y_n, y_th, si):
@@ -59,6 +64,10 @@ def f_n(t, y, si):
     :type y: np.ndarray
     """
     n_n = 1 + si.n_pg + si.n_dg
+    has_poison = getattr(si, "poisons", None) and si.poisons.get("enabled", False)
+    if has_poison:
+        n_n += 2   # I & Xe
+
     if len(y) < n_n:
         msg = 'equation numbers %d ' % len(y)
         msg += 'should be at least the number of neutronics equations %d' % n_n
@@ -77,6 +86,17 @@ def f_n(t, y, si):
     for k in range(0, si.n_dg):
         i += 1
         f[i] = si.ne.dwdt(y[0], y[i], k)
+
+    end_dg = end_pg + si.n_dg
+    
+    if has_poison:
+        i_idx = end_dg
+        xe_idx = end_dg + 1
+        i += 1
+        f[i] = si.ne.dIdt(y[0], y[i_idx])
+        i += 1
+        f[i] = si.ne.dXedt(y[0], y[i_idx], y[xe_idx])
+
     return f
 
 
@@ -125,8 +145,35 @@ def y0(si):
         i += 1
         f[i] = 0
     assert i == end_dg - 1
+
+    if getattr(si, "poisons", None) and si.poisons.get("enabled", False):
+        Ef  = si.poisons.get("E_fission", 3.204e-11)
+        F0  = f[0] / Ef
+        lI  = si.poisons["lambda_I"]
+        lX  = si.poisons["lambda_Xe"]
+        gI  = si.poisons["gamma_I"]
+        gX  = si.poisons["gamma_Xe"]
+        kphi = si.poisons.get("phi_per_watt", 0.0)
+        sigI = si.poisons.get("sigma_I", 0.0)
+        sigX = si.poisons.get("sigma_Xe", 0.0)
+        phi0 = kphi * f[0]
+        # near-equilibrium guesses at initial power todo(pran): check these values
+        I0  = (gI * F0) / (lI + sigI * phi0 + 1e-30)
+        Xe0 = (gX * F0 + lI * I0) / (lX + sigX * phi0 + 1e-30)
+        i += 1
+        f[i] = I0
+        i += 1
+        f[i] = Xe0
+        si.ne._Xe = Xe0
+        si.ne._I  = I0
+        if "X_ref" not in si.poisons:
+            si.poisons["X_ref"] = Xe0
+        if hasattr(si, "ne") and hasattr(si.ne, "_poisons"):
+            si.ne._poisons["X_ref"] = si.poisons["X_ref"]
+
     for idx, comp in enumerate(si.components):
         f[i + idx + 1] = comp.T0.magnitude
+
     assert len(f) == si.n_entries()
     si.y[0] = f
     return f
@@ -139,6 +186,8 @@ def y0_n(si):
     :type si: SimInfo
     """
     idx = si.n_pg + si.n_dg + 1
+    if getattr(si, "poisons", None) and si.poisons.get("enabled", False):
+        idx += 2
     y = y0(si)[:idx]
     return y
 
@@ -150,6 +199,8 @@ def y0_th(si):
     :type si: SimInfo
     """
     thidx = si.n_pg + si.n_dg + 1
+    if getattr(si, "poisons", None) and si.poisons.get("enabled", False):
+        thidx += 2
     y = y0(si)[thidx:]
     return y
 
@@ -195,6 +246,9 @@ def log_results(si):
     pyrklog.info("\nPrecursor betas: \n" + str(si.ne._pd.betas()))
     pyrklog.info("\nDecay kappas: \n" + str(si.ne._dd.kappas()))
     pyrklog.info("\nDecay lambdas: \n" + str(si.ne._dd.lambdas()))
+    if getattr(si, "poisons", None) and si.poisons.get("enabled", False):
+        pyrklog.info("\nFinal Xe: " + str(si.ne._Xe) + " Final I: " + str(si.ne._I))
+        pyrklog.info("\nPoisons: \n" + str(si.ne._poisons))
 
 
 def print_logo(curr_dir):
@@ -267,6 +321,9 @@ def main(args, curr_dir):
         n_ref = 0
     else:
         n_ref = infile.n_ref
+
+    poisons = getattr(infile, "poisons", None)
+
     si = sim_info.SimInfo(timer=infile.ti,
                           components=infile.components,
                           iso=infile.fission_iso,
@@ -276,6 +333,7 @@ def main(args, curr_dir):
                           n_fic=n_ref,
                           kappa=infile.kappa,
                           feedback=infile.feedback,
+                          poisons=poisons,
                           rho_ext=infile.rho_ext,
                           plotdir=args.plotdir,
                           infile=args.infile,

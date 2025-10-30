@@ -30,6 +30,8 @@ def plot(y, si):
         plot_omegas(x, y, si)
     plot_temps_together(x, y, si)
     plot_temps_separately(x, y, si)
+    if getattr(si, "poisons", None) and si.poisons.get("enabled", False):
+        plot_xe_i(x, y, si)
 
 
 def plot_reactivity(x, si):
@@ -100,6 +102,20 @@ def plot_zetas(x, y, si):
     plt.title("Concentration of Neutron Precursors, $\zeta_i [\#/dr^3]$")
     plt.legend()
     saveplot("zetas", plt, si.plotdir)
+
+def plot_xe_i(x, y, si):
+    idx = 1 + si.ne._npg + si.ne._ndg
+    plt.plot(x, y[:, idx], color=my_colors(0, 2), marker='.',
+                label="iodine")
+    idx += 1
+    plt.plot(x, y[:, idx], color=my_colors(1, 2), marker='.',
+                label="xenon")
+    
+    plt.xlabel(r'Time $[s]$')
+    plt.ylabel("Concentration of Xe/I")
+    plt.title("Concentration of Xe/I")
+    plt.legend()
+    saveplot("xei", plt, si.plotdir)
 
 
 def plot_omegas(x, y, si):

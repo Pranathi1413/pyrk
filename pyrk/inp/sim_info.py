@@ -22,6 +22,7 @@ class SimInfo(object):
                  kappa=0.0,
                  rho_ext=None,
                  feedback=False,
+                 poisons=None,
                  plotdir='images',
                  infile=None,
                  sim_id=None,
@@ -59,6 +60,7 @@ class SimInfo(object):
         self.n_pg = n_precursors + n_fic
         self.n_dg = n_decay
         self.rho_ext = self.init_rho_ext(rho_ext)
+        self.poisons = poisons
         self.feedback = feedback
         self.ne = self.init_ne()
         self.kappa = kappa
@@ -116,7 +118,8 @@ class SimInfo(object):
                                    n_decay=self.n_dg,
                                    timer=self.timer,
                                    rho_ext=self.rho_ext,
-                                   feedback=self.feedback)
+                                   feedback=self.feedback,
+                                   poisons=self.poisons)
         return ne
 
     def n_components(self):
@@ -129,6 +132,7 @@ class SimInfo(object):
         """The number of entries in the pde to be solved
         """
         to_ret = 1 + self.n_pg + self.n_dg + len(self.components)
+        if self.poisons and self.poisons.get("enabled", False): to_ret += 2
         return int(to_ret)
 
     def add_th_component(self, th_component):
@@ -167,10 +171,12 @@ class SimInfo(object):
         return ts, st
 
     def get_input_blob(self, filename):
+        print("here")
         instring = ''
         if filename is not None:
             with open(filename, 'r') as f:
                 instring = f.read()
+        print("here2" + instring)
         return instring
 
     def generate_sim_id(self):
@@ -189,7 +195,7 @@ class SimInfo(object):
                'timestamp': ts,
                'humantime': st,
                'revision': self.get_git_revision_short_hash(),
-               'inputblob': self.get_input_blob(self.infile),
+            #    'inputblob': self.get_input_blob(self.infile),
                't0': self.timer.t0.magnitude,
                'tf': self.timer.tf.magnitude,
                'dt': self.timer.dt.magnitude,

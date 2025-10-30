@@ -18,7 +18,8 @@ class Neutronics(object):
                  n_fic=0,
                  timer=Timer(),
                  rho_ext=None,
-                 feedback=False):
+                 feedback=False,
+                 poisons=None):
         """
         Creates a Neutronics object that holds the neutronics simulation
         information.
@@ -74,6 +75,8 @@ class Neutronics(object):
 
         self.feedback = feedback
         """feedback (bool): False if no reactivity feedbacks, true otherwise"""
+
+        self._poisons = poisons or {"enabled": False}
 
     def init_rho_ext(self, rho_ext):
         if rho_ext is None:
@@ -135,6 +138,30 @@ class Neutronics(object):
         p = power
         lam = self._dd.lambdas()[k]
         return kappa * p - lam * omega
+    
+    def dIdt(self, power, I):
+        if not self._poisons.get("enabled", False): return 0.0
+        Ef = self._poisons.get("E_fission", 3.204e-11)
+        F  = power / Ef # fission rate
+        lI = self._poisons["lambda_I"] # decay rate
+        gI = self._poisons["gamma_I"] # production probability
+        sigI = self._poisons.get("sigma_I", 0.0) # to build absorption or burn rate
+        kphi = self._poisons.get("phi_per_watt", 0.0) # to build absorption or burn rate
+        phi  = kphi * power # kburn * power
+        return gI * F - lI * I - sigI * phi * I
+
+    def dXedt(self, power, I, Xe):
+        if not self._poisons.get("enabled", False): return 0.0
+        Ef = self._poisons.get("E_fission", 3.204e-11)
+        F  = power / Ef
+        lI = self._poisons["lambda_I"]
+        lX = self._poisons["lambda_Xe"]
+        gX = self._poisons["gamma_Xe"]
+        sigX = self._poisons.get("sigma_Xe", 0.0)
+        kphi = self._poisons.get("phi_per_watt", 0.0)
+        phi  = kphi * power
+        return gX * F + lI * I - lX * Xe - sigX * phi * Xe
+
 
     def reactivity(self, t_idx, components):
         """Returns the reactivity, in $\Delta k$, at time t
@@ -150,6 +177,11 @@ class Neutronics(object):
             for component in components:
                 rho[component.name] = component.temp_reactivity(t_idx)
         rho["external"] = self._rho_ext(t_idx=t_idx).to('delta_k')
+        if self._poisons.get("enabled", False) and hasattr(self, "_Xe"):
+            ax = self._poisons.get("alpha_xe", 0.0)
+            Xref = self._poisons.get("X_ref", 0.0)
+            rho["xenon"] = -ax * (self._Xe - Xref)
+
         to_ret = sum(rho.values()).magnitude
         self._rho[t_idx] = to_ret
         return to_ret
