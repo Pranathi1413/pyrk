@@ -237,6 +237,8 @@ def solve(si, y, infile):
 
 
 def log_results(si):
+    pyrklog.info("\nTime series: \n" + np.array_str(si.timer.series.magnitude))
+    pyrklog.info("\nPower Output: \n" + np.array_str(si.y[:,0]))
     pyrklog.info("\nReactivity : \n" + str(si.ne._rho))
     pyrklog.info("\nFinal Result : \n" + np.array_str(si.y))
     for comp in si.components:
@@ -349,6 +351,12 @@ def main(args, curr_dir):
     if args.enable_profiler is True and profile is not None:
         post_profiling(profile, args)
 
+    outcsv = args.outcsv
+    power_tot = getattr(infile, "power_tot", 1)
+    out_power = si[:,0] * power_tot
+    data = np.column_stack((si.timer.series.magnitude, si.rho_ext.vals, out_power, si.ne._rho))
+    np.savetxt(outcsv, data, delimiter=",", fmt="%.5f")
+
     pyrklog.critical("\nSimulation succeeded.\n")
     pyrklog.critical("\nSimulation succeeded.\n")
 
@@ -368,6 +376,9 @@ if __name__ == "__main__":
     ap.add_argument('--outfile', 
                     help='the name of the output database',
                     default='pyrk.h5')
+    ap.add_argument('--outcsv',
+                    help='the name of output csv file',
+                    default='out.csv')
     ap.add_argument('--enable_profiler',
                     help='enables profiler',
                     action='store_true')
