@@ -353,7 +353,7 @@ def main(args, curr_dir):
 
     outcsv = args.outcsv
     power_tot = getattr(infile, "power_tot", 1)
-    out_power = si[:,0] * power_tot
+    out_power = si.y[:,0] * power_tot.magnitude
     data = np.column_stack((si.timer.series.magnitude, si.rho_ext.vals, out_power, si.ne._rho))
     np.savetxt(outcsv, data, delimiter=",", fmt="%.5f")
 
@@ -365,7 +365,7 @@ if __name__ == "__main__":
     curr_dir = os.path.dirname(__file__)
     ap = argparse.ArgumentParser(description='PyRK parameters')
     ap.add_argument('--infile',
-                    help='the name of the input file',
+            help='the name of the input file',
                     default='input')
     ap.add_argument('--logfile',
                     help='the name of the log file',
