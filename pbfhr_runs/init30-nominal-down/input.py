@@ -46,7 +46,7 @@ t_shell = 1043.150000 * units.kelvin
 t_cool  = 923.150000 * units.kelvin
 
 # Total power, Watts, thermal
-power_tot = 2.360000e+08 * units.watt
+power_tot = 7.080000e+07 * units.watt
 
 kappa = 0.0
 
@@ -113,8 +113,8 @@ rho_ext = RampReactivityInsertion(
     t_start=2.000000 * units.seconds,
     t_end=302.000000 * units.seconds,
     rho_init=0.0 * units.delta_k,
-    rho_rise=-10.000000 * units.pcm,
-    rho_final=-10.000000 * units.pcm
+    rho_rise=-1200.000000 * units.pcm,
+    rho_final=-1200.000000 * units.pcm
 )
 
 
