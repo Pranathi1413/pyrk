@@ -17,9 +17,9 @@ POWER_LEVELS = [0.2, 0.3, 0.5, 0.7, 0.8]
 TEMP_BUCKETS = ["low", "nominal", "high"]
 
 # Ramping details (same for all scenarios)
-PRE_RAMP_S   = 60.0    # seconds of steady-state before ramp
+PRE_RAMP_S   = 2.0    # seconds of steady-state before ramp
 RAMP_TIME_S  = 300.0   # duration of reactivity ramp
-POST_RAMP_S  = 300.0   # seconds after ramp with constant reactivity
+POST_RAMP_S  = 5.0   # seconds after ramp with constant reactivity
 
 # Reactivity ramp rate (pcm per minute) - tuned to get ~1%/min power ramp
 RHO_RATE_PCM_PER_MIN = 2.0

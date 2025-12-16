@@ -27,7 +27,7 @@ import numpy as np
 
 t0 = 0.0 * units.seconds
 dt = 0.02 * units.seconds
-tf = $TF * units.seconds   # scenario-specific final time
+tf = 307.000000 * units.seconds   # scenario-specific final time
 
 
 
@@ -40,13 +40,13 @@ alpha_shell = 0 * units.pcm / units.kelvin
 alpha_cool = random.gauss(0.23, 0.11) * units.pcm / units.kelvin
 
 # Initial temperatures
-t_mod   = $T_MOD0   # already in kelvin
-t_fuel  = $T_FUEL0
-t_shell = $T_SHELL0
-t_cool  = $T_COOL0
+t_mod   = 1013.150000 * units.kelvin   # already in kelvin
+t_fuel  = 1023.150000 * units.kelvin
+t_shell = 1003.150000 * units.kelvin
+t_cool  = 893.150000 * units.kelvin
 
 # Total power, Watts, thermal
-power_tot = $POWER_TOT * units.watt
+power_tot = 2.360000e+08 * units.watt
 
 kappa = 0.0
 
@@ -110,11 +110,11 @@ from pyrk.reactivity_insertion import RampReactivityInsertion
 # External reactivity ramp, scenario-specific.
 rho_ext = RampReactivityInsertion(
     timer=ti,
-    t_start=$T_RAMP_START * units.seconds,
-    t_end=$T_RAMP_END * units.seconds,
+    t_start=2.000000 * units.seconds,
+    t_end=302.000000 * units.seconds,
     rho_init=0.0 * units.delta_k,
-    rho_rise=$DELTA_RHO * units.pcm,
-    rho_final=$DELTA_RHO * units.pcm
+    rho_rise=10.000000 * units.pcm,
+    rho_final=10.000000 * units.pcm
 )
 
 

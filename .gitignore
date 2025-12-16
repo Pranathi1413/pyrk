@@ -29,6 +29,8 @@ matplotlibrc
 .ropeproject
 
 *.pdf
+!pbfhr_runs/**/power.pdf
+!pbfhr_runs/**/reactivity.pdf
 *.eps
 
 .DS_Store
