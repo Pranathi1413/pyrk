@@ -99,8 +99,8 @@ feedback = True
 
 # External reactivity: start at bias, ramp by delta, hold final
 from pyrk.reactivity_insertion import RampReactivityInsertion
-rho_bias = 200.000000 * units.pcm
-delta_rho = 480.000000 * units.pcm
+rho_bias = 1000.000000 * units.pcm
+delta_rho = 1500.000000 * units.pcm
 
 rho_ext = RampReactivityInsertion(
     timer=ti,
