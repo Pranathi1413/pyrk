@@ -22,7 +22,7 @@ RAMP_TIME_S  = 300.0   # duration of reactivity ramp
 POST_RAMP_S  = 5.0   # seconds after ramp with constant reactivity
 
 # Reactivity ramp rate (pcm per minute) - tuned to get ~1%/min power ramp
-RHO_RATE_PCM_PER_MIN = 2.0
+RHO_RATE_PCM_PER_MIN = 240.0
 
 
 @dataclass
@@ -129,7 +129,7 @@ def build_input_from_template(template_text: str, scen: Scenario) -> str:
         delta_rho_pcm = -delta_rho_pcm
 
     # Use nominal PB-FHR power for TH scaling
-    power_tot = P_NOM_TH
+    power_tot = scen.p0 * P_NOM_TH
 
     # Initial temperatures for bucket
     t_fuel0, t_mod0, t_shell0, t_cool0 = initial_temps_kelvin(scen.bucket)
